@@ -23,9 +23,9 @@ public struct PCBC: BlockMode {
   }
 
   public let options: BlockModeOption = [.initializationVectorRequired, .paddingRequired]
-  private let iv: Array<UInt8>
+  private let iv: [UInt8]
 
-  public init(iv: Array<UInt8>) {
+  public init(iv: [UInt8]) {
     self.iv = iv
   }
 
@@ -51,7 +51,7 @@ struct PCBCModeWorker: BlockModeWorker {
     self.cipherOperation = cipherOperation
   }
 
-  mutating func encrypt(block plaintext: ArraySlice<UInt8>) -> Array<UInt8> {
+  mutating func encrypt(block plaintext: ArraySlice<UInt8>) -> [UInt8] {
     guard let ciphertext = cipherOperation(xor(prev ?? iv, plaintext)) else {
       return Array(plaintext)
     }
@@ -59,11 +59,11 @@ struct PCBCModeWorker: BlockModeWorker {
     return ciphertext
   }
 
-  mutating func decrypt(block ciphertext: ArraySlice<UInt8>) -> Array<UInt8> {
+  mutating func decrypt(block ciphertext: ArraySlice<UInt8>) -> [UInt8] {
     guard let plaintext = cipherOperation(ciphertext) else {
       return Array(ciphertext)
     }
-    let result: Array<UInt8> = xor(prev ?? iv, plaintext)
+    let result: [UInt8] = xor(prev ?? iv, plaintext)
     prev = xor(plaintext.slice, ciphertext)
     return result
   }

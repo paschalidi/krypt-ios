@@ -14,14 +14,14 @@
 //
 
 public protocol PaddingProtocol {
-  func add(to: Array<UInt8>, blockSize: Int) -> Array<UInt8>
-  func remove(from: Array<UInt8>, blockSize: Int?) -> Array<UInt8>
+  func add(to: [UInt8], blockSize: Int) -> [UInt8]
+  func remove(from: [UInt8], blockSize: Int?) -> [UInt8]
 }
 
 public enum Padding: PaddingProtocol {
   case noPadding, zeroPadding, pkcs7, pkcs5
 
-  public func add(to: Array<UInt8>, blockSize: Int) -> Array<UInt8> {
+  public func add(to: [UInt8], blockSize: Int) -> [UInt8] {
     switch self {
     case .noPadding:
       return to // NoPadding().add(to: to, blockSize: blockSize)
@@ -34,7 +34,7 @@ public enum Padding: PaddingProtocol {
     }
   }
 
-  public func remove(from: Array<UInt8>, blockSize: Int?) -> Array<UInt8> {
+  public func remove(from: [UInt8], blockSize: Int?) -> [UInt8] {
     switch self {
     case .noPadding:
       return from // NoPadding().remove(from: from, blockSize: blockSize)

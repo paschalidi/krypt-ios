@@ -21,10 +21,10 @@ public class CBCMAC: Authenticator {
   private let key: SecureBytes
 
   private static let BlockSize: Int = 16
-  private static let Zero: Array<UInt8> = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
-  private static let Rb: Array<UInt8> = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x87]
+  private static let Zero: [UInt8] = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+  private static let Rb: [UInt8] = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x87]
 
-  public init(key: Array<UInt8>) throws {
+  public init(key: [UInt8]) throws {
     if key.count != 16 {
       throw Error.wrongKeyLength
     }
@@ -33,7 +33,7 @@ public class CBCMAC: Authenticator {
 
   // MARK: Authenticator
 
-  public func authenticate(_ bytes: Array<UInt8>) throws -> Array<UInt8> {
+  public func authenticate(_ bytes: [UInt8]) throws -> [UInt8] {
     let aes = try AES(key: Array(key), blockMode: CBC(iv: CBCMAC.Zero), padding: .noPadding)
 
     let l = try aes.encrypt(CBCMAC.Zero)
@@ -66,8 +66,8 @@ public class CBCMAC: Authenticator {
       lastBlock = xor(lastBlock, subKey2)
     }
 
-    var x = Array<UInt8>(repeating: 0x00, count: CBCMAC.BlockSize)
-    var y = Array<UInt8>(repeating: 0x00, count: CBCMAC.BlockSize)
+    var x = [UInt8](repeating: 0x00, count: CBCMAC.BlockSize)
+    var y = [UInt8](repeating: 0x00, count: CBCMAC.BlockSize)
     for block in blocks {
       y = xor(block, x)
       x = try aes.encrypt(y)
@@ -89,8 +89,8 @@ public class CBCMAC: Authenticator {
    - bytes: byte array
    - returns: bit shifted bit string split again in array of bytes
    */
-  private func leftShiftOneBit(_ bytes: Array<UInt8>) -> Array<UInt8> {
-    var shifted = Array<UInt8>(repeating: 0x00, count: bytes.count)
+  private func leftShiftOneBit(_ bytes: [UInt8]) -> [UInt8] {
+    var shifted = [UInt8](repeating: 0x00, count: bytes.count)
     let last = bytes.count - 1
     for index in 0 ..< last {
       shifted[index] = bytes[index] << 1

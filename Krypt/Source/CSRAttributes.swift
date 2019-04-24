@@ -18,7 +18,7 @@ public struct CSRAttributes {
   public let uniqueIdentifier: String?
   public let givenName: String?
   public let surname: String?
-    
+
   public init(
     country: String?,
     state: String?,
@@ -29,7 +29,7 @@ public struct CSRAttributes {
     uniqueIdentifier: String?,
     givenName: String?,
     surname: String?
-    ) {
+  ) {
     self.country = country
     self.state = state
     self.location = location

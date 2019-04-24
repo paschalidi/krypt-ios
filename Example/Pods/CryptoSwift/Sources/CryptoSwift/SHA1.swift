@@ -18,13 +18,13 @@ public final class SHA1: DigestType {
   static let blockSize: Int = 64
   fileprivate static let hashInitialValue: ContiguousArray<UInt32> = [0x6745_2301, 0xEFCD_AB89, 0x98BA_DCFE, 0x1032_5476, 0xC3D2_E1F0]
 
-  fileprivate var accumulated = Array<UInt8>()
+  fileprivate var accumulated = [UInt8]()
   fileprivate var processedBytesTotalCount: Int = 0
   fileprivate var accumulatedHash: ContiguousArray<UInt32> = SHA1.hashInitialValue
 
   public init() {}
 
-  public func calculate(for bytes: Array<UInt8>) -> Array<UInt8> {
+  public func calculate(for bytes: [UInt8]) -> [UInt8] {
     do {
       return try update(withBytes: bytes.slice, isLast: true)
     } catch {
@@ -47,10 +47,8 @@ public final class SHA1: DigestType {
       case 0 ... 15:
         let start = chunk.startIndex.advanced(by: x * 4) // * MemoryLayout<UInt32>.size
         M[x] = UInt32(bytes: chunk, fromIndex: start)
-        break
       default:
         M[x] = rotateLeft(M[x - 3] ^ M[x - 8] ^ M[x - 14] ^ M[x - 16], by: 1)
-        break
       }
     }
 
@@ -69,19 +67,15 @@ public final class SHA1: DigestType {
       case 0 ... 19:
         f = (B & C) | ((~B) & D)
         k = 0x5A82_7999
-        break
       case 20 ... 39:
         f = B ^ C ^ D
         k = 0x6ED9_EBA1
-        break
       case 40 ... 59:
         f = (B & C) | (B & D) | (C & D)
         k = 0x8F1B_BCDC
-        break
       case 60 ... 79:
         f = B ^ C ^ D
         k = 0xCA62_C1D6
-        break
       default:
         break
       }
@@ -104,7 +98,7 @@ public final class SHA1: DigestType {
 
 extension SHA1: Updatable {
   @discardableResult
-  public func update(withBytes bytes: ArraySlice<UInt8>, isLast: Bool = false) throws -> Array<UInt8> {
+  public func update(withBytes bytes: ArraySlice<UInt8>, isLast: Bool = false) throws -> [UInt8] {
     accumulated += bytes
 
     if isLast {
@@ -129,7 +123,7 @@ extension SHA1: Updatable {
     processedBytesTotalCount += processedBytes
 
     // output current hash
-    var result = Array<UInt8>(repeating: 0, count: SHA1.digestLength)
+    var result = [UInt8](repeating: 0, count: SHA1.digestLength)
     var pos = 0
     for idx in 0 ..< accumulatedHash.count {
       let h = accumulatedHash[idx]

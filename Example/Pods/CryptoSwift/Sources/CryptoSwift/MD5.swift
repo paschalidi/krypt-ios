@@ -16,14 +16,14 @@
 public final class MD5: DigestType {
   static let blockSize: Int = 64
   static let digestLength: Int = 16 // 128 / 8
-  fileprivate static let hashInitialValue: Array<UInt32> = [0x6745_2301, 0xEFCD_AB89, 0x98BA_DCFE, 0x1032_5476]
+  fileprivate static let hashInitialValue: [UInt32] = [0x6745_2301, 0xEFCD_AB89, 0x98BA_DCFE, 0x1032_5476]
 
-  fileprivate var accumulated = Array<UInt8>()
+  fileprivate var accumulated = [UInt8]()
   fileprivate var processedBytesTotalCount: Int = 0
-  fileprivate var accumulatedHash: Array<UInt32> = MD5.hashInitialValue
+  fileprivate var accumulatedHash: [UInt32] = MD5.hashInitialValue
 
   /** specifies the per-round shift amounts */
-  private let s: Array<UInt32> = [
+  private let s: [UInt32] = [
     7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22,
     5, 9, 14, 20, 5, 9, 14, 20, 5, 9, 14, 20, 5, 9, 14, 20,
     4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23,
@@ -31,7 +31,7 @@ public final class MD5: DigestType {
   ]
 
   /** binary integer part of the sines of integers (Radians) */
-  private let k: Array<UInt32> = [
+  private let k: [UInt32] = [
     0xD76A_A478, 0xE8C7_B756, 0x2420_70DB, 0xC1BD_CEEE,
     0xF57C_0FAF, 0x4787_C62A, 0xA830_4613, 0xFD46_9501,
     0x6980_98D8, 0x8B44_F7AF, 0xFFFF_5BB1, 0x895C_D7BE,
@@ -52,7 +52,7 @@ public final class MD5: DigestType {
 
   public init() {}
 
-  public func calculate(for bytes: Array<UInt8>) -> Array<UInt8> {
+  public func calculate(for bytes: [UInt8]) -> [UInt8] {
     do {
       return try update(withBytes: bytes.slice, isLast: true)
     } catch {
@@ -61,7 +61,7 @@ public final class MD5: DigestType {
   }
 
   // mutating currentHash in place is way faster than returning new result
-  fileprivate func process(block chunk: ArraySlice<UInt8>, currentHash: inout Array<UInt32>) {
+  fileprivate func process(block chunk: ArraySlice<UInt8>, currentHash: inout [UInt32]) {
     assert(chunk.count == 16 * 4)
 
     // Initialize hash value for this chunk:
@@ -81,19 +81,15 @@ public final class MD5: DigestType {
       case 0 ... 15:
         F = (B & C) | ((~B) & D)
         g = j
-        break
       case 16 ... 31:
         F = (D & B) | (~D & C)
         g = (5 * j + 1) % 16
-        break
       case 32 ... 47:
         F = B ^ C ^ D
         g = (3 * j + 5) % 16
-        break
       case 48 ... 63:
         F = C ^ (B | (~D))
         g = (7 * j) % 16
-        break
       default:
         break
       }
@@ -121,7 +117,7 @@ public final class MD5: DigestType {
 }
 
 extension MD5: Updatable {
-  public func update(withBytes bytes: ArraySlice<UInt8>, isLast: Bool = false) throws -> Array<UInt8> {
+  public func update(withBytes bytes: ArraySlice<UInt8>, isLast: Bool = false) throws -> [UInt8] {
     accumulated += bytes
 
     if isLast {
@@ -146,12 +142,12 @@ extension MD5: Updatable {
     processedBytesTotalCount += processedBytes
 
     // output current hash
-    var result = Array<UInt8>()
+    var result = [UInt8]()
     result.reserveCapacity(MD5.digestLength)
 
     for hElement in accumulatedHash {
       let hLE = hElement.littleEndian
-      result += Array<UInt8>(arrayLiteral: UInt8(hLE & 0xFF), UInt8((hLE >> 8) & 0xFF), UInt8((hLE >> 16) & 0xFF), UInt8((hLE >> 24) & 0xFF))
+      result += [UInt8](arrayLiteral: UInt8(hLE & 0xFF), UInt8((hLE >> 8) & 0xFF), UInt8((hLE >> 16) & 0xFF), UInt8((hLE >> 24) & 0xFF))
     }
 
     // reset hash value for instance

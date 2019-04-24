@@ -13,7 +13,7 @@
 //  - This notice may not be removed or altered from any source or binary distribution.
 //
 
-public typealias CipherOperationOnBlock = (_ block: ArraySlice<UInt8>) -> Array<UInt8>?
+public typealias CipherOperationOnBlock = (_ block: ArraySlice<UInt8>) -> [UInt8]?
 
 public protocol BlockMode {
   var options: BlockModeOption { get }

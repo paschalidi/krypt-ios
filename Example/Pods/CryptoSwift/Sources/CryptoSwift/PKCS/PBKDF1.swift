@@ -19,7 +19,7 @@ public extension PKCS5 {
   /// PBKDF1 is recommended only for compatibility with existing
   /// applications since the keys it produces may not be large enough for
   /// some applications.
-  public struct PBKDF1 {
+  struct PBKDF1 {
     public enum Error: Swift.Error {
       case invalidInput
       case derivedKeyTooLong
@@ -37,7 +37,7 @@ public extension PKCS5 {
         }
       }
 
-      fileprivate func calculateHash(_ bytes: Array<UInt8>) -> Array<UInt8>? {
+      fileprivate func calculateHash(_ bytes: [UInt8]) -> [UInt8] {
         switch self {
         case .sha1:
           return Digest.sha1(bytes)
@@ -50,14 +50,14 @@ public extension PKCS5 {
     private let iterations: Int // c
     private let variant: Variant
     private let keyLength: Int
-    private let t1: Array<UInt8>
+    private let t1: [UInt8]
 
     /// - parameters:
     ///   - salt: salt, an eight-bytes
     ///   - variant: hash variant
     ///   - iterations: iteration count, a positive integer
     ///   - keyLength: intended length of derived key
-    public init(password: Array<UInt8>, salt: Array<UInt8>, variant: Variant = .sha1, iterations: Int = 4096 /* c */, keyLength: Int? = nil /* dkLen */ ) throws {
+    public init(password: [UInt8], salt: [UInt8], variant: Variant = .sha1, iterations: Int = 4096 /* c */, keyLength: Int? = nil /* dkLen */ ) throws {
       precondition(iterations > 0)
       precondition(salt.count == 8)
 
@@ -67,9 +67,7 @@ public extension PKCS5 {
         throw Error.derivedKeyTooLong
       }
 
-      guard let t1 = variant.calculateHash(password + salt) else {
-        throw Error.invalidInput
-      }
+      let t1 = variant.calculateHash(password + salt)
 
       self.iterations = iterations
       self.variant = variant
@@ -78,10 +76,10 @@ public extension PKCS5 {
     }
 
     /// Apply the underlying hash function Hash for c iterations
-    public func calculate() -> Array<UInt8> {
+    public func calculate() -> [UInt8] {
       var t = t1
       for _ in 2 ... iterations {
-        t = variant.calculateHash(t)!
+        t = variant.calculateHash(t)
       }
       return Array(t[0 ..< self.keyLength])
     }

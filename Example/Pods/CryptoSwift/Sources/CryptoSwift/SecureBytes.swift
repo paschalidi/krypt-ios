@@ -24,10 +24,10 @@ typealias Key = SecureBytes
 ///  Keeps bytes in memory. Because this is class, bytes are not copied
 ///  and memory area is locked as long as referenced, then unlocked on deinit
 final class SecureBytes {
-  fileprivate let bytes: Array<UInt8>
+  fileprivate let bytes: [UInt8]
   let count: Int
 
-  init(bytes: Array<UInt8>) {
+  init(bytes: [UInt8]) {
     self.bytes = bytes
     count = bytes.count
     self.bytes.withUnsafeBufferPointer { (pointer) -> Void in

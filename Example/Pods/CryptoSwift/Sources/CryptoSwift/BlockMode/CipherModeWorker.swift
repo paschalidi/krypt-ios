@@ -20,8 +20,8 @@ public protocol CipherModeWorker {
   // eg. for GCM combined mode
   var additionalBufferSize: Int { get }
 
-  mutating func encrypt(block plaintext: ArraySlice<UInt8>) -> Array<UInt8>
-  mutating func decrypt(block ciphertext: ArraySlice<UInt8>) -> Array<UInt8>
+  mutating func encrypt(block plaintext: ArraySlice<UInt8>) -> [UInt8]
+  mutating func decrypt(block ciphertext: ArraySlice<UInt8>) -> [UInt8]
 }
 
 /// Block workers use `BlockEncryptor`

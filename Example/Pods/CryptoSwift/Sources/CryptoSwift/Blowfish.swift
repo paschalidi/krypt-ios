@@ -38,16 +38,16 @@ public final class Blowfish {
   private var encryptWorker: CipherModeWorker!
 
   private let N = 16 // rounds
-  private var P: Array<UInt32>
-  private var S: Array<Array<UInt32>>
-  private let origP: Array<UInt32> = [
+  private var P: [UInt32]
+  private var S: [[UInt32]]
+  private let origP: [UInt32] = [
     0x243F_6A88, 0x85A3_08D3, 0x1319_8A2E, 0x0370_7344, 0xA409_3822,
     0x299F_31D0, 0x082E_FA98, 0xEC4E_6C89, 0x4528_21E6, 0x38D0_1377,
     0xBE54_66CF, 0x34E9_0C6C, 0xC0AC_29B7, 0xC97C_50DD, 0x3F84_D5B5,
     0xB547_0917, 0x9216_D5D9, 0x8979_FB1B
   ]
 
-  private let origS: Array<Array<UInt32>> = [
+  private let origS: [[UInt32]] = [
     [
       0xD131_0BA6, 0x98DF_B5AC, 0x2FFD_72DB, 0xD01A_DFB7,
       0xB8E1_AFED, 0x6A26_7E96, 0xBA7C_9045, 0xF12C_7F99,
@@ -314,7 +314,7 @@ public final class Blowfish {
     ]
   ]
 
-  public init(key: Array<UInt8>, blockMode: BlockMode = CBC(iv: Array<UInt8>(repeating: 0, count: Blowfish.blockSize)), padding: Padding) throws {
+  public init(key: [UInt8], blockMode: BlockMode = CBC(iv: [UInt8](repeating: 0, count: Blowfish.blockSize)), padding: Padding) throws {
     precondition(key.count >= 5 && key.count <= 56)
 
     self.blockMode = blockMode
@@ -344,7 +344,7 @@ public final class Blowfish {
     // todo expand key
   }
 
-  private func expandKey(key: Array<UInt8>) {
+  private func expandKey(key: [UInt8]) {
     var j = 0
     for i in 0 ..< (N + 2) {
       var data: UInt32 = 0x0
@@ -376,8 +376,8 @@ public final class Blowfish {
     }
   }
 
-  fileprivate func encrypt(block: ArraySlice<UInt8>) -> Array<UInt8>? {
-    var result = Array<UInt8>()
+  fileprivate func encrypt(block: ArraySlice<UInt8>) -> [UInt8]? {
+    var result = [UInt8]()
 
     var l = UInt32(bytes: block[block.startIndex ..< block.startIndex.advanced(by: 4)])
     var r = UInt32(bytes: block[block.startIndex.advanced(by: 4) ..< block.startIndex.advanced(by: 8)])
@@ -405,8 +405,8 @@ public final class Blowfish {
     return result
   }
 
-  fileprivate func decrypt(block: ArraySlice<UInt8>) -> Array<UInt8>? {
-    var result = Array<UInt8>()
+  fileprivate func decrypt(block: ArraySlice<UInt8>) -> [UInt8]? {
+    var result = [UInt8]()
 
     var l = UInt32(bytes: block[block.startIndex ..< block.startIndex.advanced(by: 4)])
     var r = UInt32(bytes: block[block.startIndex.advanced(by: 4) ..< block.startIndex.advanced(by: 8)])
@@ -497,17 +497,17 @@ extension Blowfish: Cipher {
   ///
   /// - Parameter bytes: Plaintext data
   /// - Returns: Encrypted data
-  public func encrypt<C: Collection>(_ bytes: C) throws -> Array<UInt8> where C.Element == UInt8, C.Index == Int {
+  public func encrypt<C: Collection>(_ bytes: C) throws -> [UInt8] where C.Element == UInt8, C.Index == Int {
     let bytes = padding.add(to: Array(bytes), blockSize: Blowfish.blockSize) // FIXME: Array(bytes) copies
 
-    var out = Array<UInt8>()
+    var out = [UInt8]()
     out.reserveCapacity(bytes.count)
 
     for chunk in bytes.batched(by: Blowfish.blockSize) {
       out += encryptWorker.encrypt(block: chunk)
     }
 
-    if blockMode.options.contains(.paddingRequired) && (out.count % Blowfish.blockSize != 0) {
+    if blockMode.options.contains(.paddingRequired), out.count % Blowfish.blockSize != 0 {
       throw Error.dataPaddingRequired
     }
 
@@ -518,12 +518,12 @@ extension Blowfish: Cipher {
   ///
   /// - Parameter bytes: Ciphertext data
   /// - Returns: Plaintext data
-  public func decrypt<C: Collection>(_ bytes: C) throws -> Array<UInt8> where C.Element == UInt8, C.Index == Int {
-    if blockMode.options.contains(.paddingRequired) && (bytes.count % Blowfish.blockSize != 0) {
+  public func decrypt<C: Collection>(_ bytes: C) throws -> [UInt8] where C.Element == UInt8, C.Index == Int {
+    if blockMode.options.contains(.paddingRequired), bytes.count % Blowfish.blockSize != 0 {
       throw Error.dataPaddingRequired
     }
 
-    var out = Array<UInt8>()
+    var out = [UInt8]()
     out.reserveCapacity(bytes.count)
 
     for chunk in Array(bytes).batched(by: Blowfish.blockSize) {

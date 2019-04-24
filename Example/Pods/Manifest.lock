@@ -1,6 +1,6 @@
 PODS:
-  - CryptoSwift (0.14.0)
-  - Krypt (0.1.1):
+  - CryptoSwift (1.0.0)
+  - Krypt (1.1.0):
     - CryptoSwift
     - OpenSSL (~> 1.1.1b)
   - OpenSSL (1.1.1b)
@@ -19,10 +19,10 @@ EXTERNAL SOURCES:
     :path: "../"
 
 SPEC CHECKSUMS:
-  CryptoSwift: 35a10419f4dbf0619c13f8c1c180037e115323fa
-  Krypt: a4394aced453703348b3b75b87eb48a01020eaf8
-  OpenSSL: 6cb470319b5ab0d01fd68a668a8c06ec9e609796
+  CryptoSwift: d81eeaa59dc5a8d03720fe919a6fd07b51f7439f
+  Krypt: d60ca494b5a57e3babd3988606fe79c1e3ee1ed5
+  OpenSSL: 45a86981c77b9ec9183794aac531c657fa661546
 
 PODFILE CHECKSUM: fc2e887cea3e1eb94aca140dc5b2c490f59436ea
 
-COCOAPODS: 1.6.0
+COCOAPODS: 1.6.1

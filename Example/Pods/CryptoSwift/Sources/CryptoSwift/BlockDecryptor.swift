@@ -16,7 +16,7 @@ public class BlockDecryptor: Cryptor, Updatable {
   private let blockSize: Int
   private let padding: Padding
   private var worker: CipherModeWorker
-  private var accumulated = Array<UInt8>()
+  private var accumulated = [UInt8]()
 
   init(blockSize: Int, padding: Padding, _ worker: CipherModeWorker) throws {
     self.blockSize = blockSize
@@ -24,16 +24,16 @@ public class BlockDecryptor: Cryptor, Updatable {
     self.worker = worker
   }
 
-  public func update(withBytes bytes: ArraySlice<UInt8>, isLast: Bool = false) throws -> Array<UInt8> {
+  public func update(withBytes bytes: ArraySlice<UInt8>, isLast: Bool = false) throws -> [UInt8] {
     accumulated += bytes
 
     // If a worker (eg GCM) can combine ciphertext + tag
     // we need to remove tag from the ciphertext.
-    if !isLast && accumulated.count < blockSize + worker.additionalBufferSize {
+    if !isLast, accumulated.count < blockSize + worker.additionalBufferSize {
       return []
     }
 
-    let accumulatedWithoutSuffix: Array<UInt8>
+    let accumulatedWithoutSuffix: [UInt8]
     if worker.additionalBufferSize > 0 {
       // FIXME: how slow is that?
       accumulatedWithoutSuffix = Array(accumulated.prefix(accumulated.count - worker.additionalBufferSize))
@@ -42,7 +42,7 @@ public class BlockDecryptor: Cryptor, Updatable {
     }
 
     var processedBytesCount = 0
-    var plaintext = Array<UInt8>(reserveCapacity: accumulatedWithoutSuffix.count)
+    var plaintext = [UInt8](reserveCapacity: accumulatedWithoutSuffix.count)
     // Processing in a block-size manner. It's good for block modes, but bad for stream modes.
     for var chunk in accumulatedWithoutSuffix.batched(by: blockSize) {
       if isLast || (accumulatedWithoutSuffix.count - processedBytesCount) >= blockSize {

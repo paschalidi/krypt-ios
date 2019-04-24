@@ -24,7 +24,7 @@
 #endif
 
 public final class SHA3: DigestType {
-  let round_constants: Array<UInt64> = [
+  let round_constants: [UInt64] = [
     0x0000_0000_0000_0001, 0x0000_0000_0000_8082, 0x8000_0000_0000_808A, 0x8000_0000_8000_8000,
     0x0000_0000_0000_808B, 0x0000_0000_8000_0001, 0x8000_0000_8000_8081, 0x8000_0000_0000_8009,
     0x0000_0000_0000_008A, 0x0000_0000_0000_0088, 0x0000_0000_8000_8009, 0x0000_0000_8000_000A,
@@ -37,8 +37,8 @@ public final class SHA3: DigestType {
   public let digestLength: Int
   public let markByte: UInt8
 
-  fileprivate var accumulated = Array<UInt8>()
-  fileprivate var accumulatedHash: Array<UInt64>
+  fileprivate var accumulated = [UInt8]()
+  fileprivate var accumulatedHash: [UInt64]
 
   public enum Variant {
     case sha224, sha256, sha384, sha512, keccak224, keccak256, keccak384, keccak512
@@ -78,10 +78,10 @@ public final class SHA3: DigestType {
     blockSize = variant.blockSize
     digestLength = variant.digestLength
     markByte = variant.markByte
-    accumulatedHash = Array<UInt64>(repeating: 0, count: digestLength)
+    accumulatedHash = [UInt64](repeating: 0, count: digestLength)
   }
 
-  public func calculate(for bytes: Array<UInt8>) -> Array<UInt8> {
+  public func calculate(for bytes: [UInt8]) -> [UInt8] {
     do {
       return try update(withBytes: bytes.slice, isLast: true)
     } catch {
@@ -95,7 +95,7 @@ public final class SHA3: DigestType {
   ///     D[x,z]=C[(x1) mod 5, z] ⊕ C[(x+1) mod 5, (z –1) mod w].
   ///  3. For all triples (x, y, z) such that 0≤x<5, 0≤y<5, and 0≤z<w, let
   ///     A′[x, y,z] = A[x, y,z] ⊕ D[x,z].
-  private func θ(_ a: inout Array<UInt64>) {
+  private func θ(_ a: inout [UInt64]) {
     let c = UnsafeMutablePointer<UInt64>.allocate(capacity: 5)
     c.initialize(repeating: 0, count: 5)
     defer {
@@ -129,7 +129,7 @@ public final class SHA3: DigestType {
   }
 
   /// A′[x, y, z]=A[(x &+ 3y) mod 5, x, z]
-  private func π(_ a: inout Array<UInt64>) {
+  private func π(_ a: inout [UInt64]) {
     let a1 = a[1]
     a[1] = a[6]
     a[6] = a[9]
@@ -159,7 +159,7 @@ public final class SHA3: DigestType {
 
   /// For all triples (x, y, z) such that 0≤x<5, 0≤y<5, and 0≤z<w, let
   /// A′[x, y,z] = A[x, y,z] ⊕ ((A[(x+1) mod 5, y, z] ⊕ 1) ⋅ A[(x+2) mod 5, y, z])
-  private func χ(_ a: inout Array<UInt64>) {
+  private func χ(_ a: inout [UInt64]) {
     for i in stride(from: 0, to: 25, by: 5) {
       let a0 = a[0 &+ i]
       let a1 = a[1 &+ i]
@@ -171,11 +171,11 @@ public final class SHA3: DigestType {
     }
   }
 
-  private func ι(_ a: inout Array<UInt64>, round: Int) {
+  private func ι(_ a: inout [UInt64], round: Int) {
     a[0] ^= round_constants[round]
   }
 
-  fileprivate func process(block chunk: ArraySlice<UInt64>, currentHash hh: inout Array<UInt64>) {
+  fileprivate func process(block chunk: ArraySlice<UInt64>, currentHash hh: inout [UInt64]) {
     // expand
     hh[0] ^= chunk[0].littleEndian
     hh[1] ^= chunk[1].littleEndian
@@ -249,7 +249,7 @@ public final class SHA3: DigestType {
 }
 
 extension SHA3: Updatable {
-  public func update(withBytes bytes: ArraySlice<UInt8>, isLast: Bool = false) throws -> Array<UInt8> {
+  public func update(withBytes bytes: ArraySlice<UInt8>, isLast: Bool = false) throws -> [UInt8] {
     accumulated += bytes
 
     if isLast {
@@ -259,7 +259,7 @@ extension SHA3: Updatable {
       // We need to always pad the input. Even if the input is a multiple of blockSize.
       let r = blockSize * 8
       let q = (r / 8) - (accumulated.count % (r / 8))
-      accumulated += Array<UInt8>(repeating: 0, count: q)
+      accumulated += [UInt8](repeating: 0, count: q)
 
       accumulated[markByteIndex] |= markByte
       accumulated[self.accumulated.count - 1] |= 0x80
@@ -275,13 +275,13 @@ extension SHA3: Updatable {
     accumulated.removeFirst(processedBytes)
 
     // TODO: verify performance, reduce vs for..in
-    let result = accumulatedHash.reduce(Array<UInt8>()) { (result, value) -> Array<UInt8> in
-      return result + value.bigEndian.bytes()
+    let result = accumulatedHash.reduce([UInt8]()) { (result, value) -> [UInt8] in
+      result + value.bigEndian.bytes()
     }
 
     // reset hash value for instance
     if isLast {
-      accumulatedHash = Array<UInt64>(repeating: 0, count: digestLength)
+      accumulatedHash = [UInt64](repeating: 0, count: digestLength)
     }
 
     return Array(result[0 ..< self.digestLength])

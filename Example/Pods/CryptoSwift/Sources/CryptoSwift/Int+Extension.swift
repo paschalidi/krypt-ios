@@ -29,7 +29,7 @@ extension Int {
 
 extension FixedWidthInteger {
   @_transparent
-  func bytes(totalBytes: Int = MemoryLayout<Self>.size) -> Array<UInt8> {
+  func bytes(totalBytes: Int = MemoryLayout<Self>.size) -> [UInt8] {
     return arrayOfBytes(value: littleEndian, length: totalBytes)
     // TODO: adjust bytes order
     // var value = self.littleEndian

@@ -27,13 +27,13 @@ public extension PKCS5 {
   ///
   /// PBKDF2 - Password-Based Key Derivation Function 2. Key stretching technique.
   ///          DK = PBKDF2(PRF, Password, Salt, c, dkLen)
-  public struct PBKDF2 {
+  struct PBKDF2 {
     public enum Error: Swift.Error {
       case invalidInput
       case derivedKeyTooLong
     }
 
-    private let salt: Array<UInt8> // S
+    private let salt: [UInt8] // S
     fileprivate let iterations: Int // c
     private let numBlocks: Int // l
     private let dkLen: Int
@@ -45,12 +45,12 @@ public extension PKCS5 {
     ///   - iterations: iteration count, a positive integer
     ///   - keyLength: intended length of derived key
     ///   - variant: MAC variant. Defaults to SHA256
-    public init(password: Array<UInt8>, salt: Array<UInt8>, iterations: Int = 4096 /* c */, keyLength: Int? = nil /* dkLen */, variant: HMAC.Variant = .sha256) throws {
+    public init(password: [UInt8], salt: [UInt8], iterations: Int = 4096 /* c */, keyLength: Int? = nil /* dkLen */, variant: HMAC.Variant = .sha256) throws {
       precondition(iterations > 0)
 
       let prf = HMAC(key: password, variant: variant)
 
-      guard iterations > 0 && !salt.isEmpty else {
+      guard iterations > 0, !salt.isEmpty else {
         throw Error.invalidInput
       }
 
@@ -68,8 +68,8 @@ public extension PKCS5 {
       numBlocks = Int(ceil(Double(keyLengthFinal) / hLen)) // l = ceil(keyLength / hLen)
     }
 
-    public func calculate() throws -> Array<UInt8> {
-      var ret = Array<UInt8>()
+    public func calculate() throws -> [UInt8] {
+      var ret = [UInt8]()
       ret.reserveCapacity(numBlocks * prf.variant.digestLength)
       for i in 1 ... numBlocks {
         // for each block T_i = U_1 ^ U_2 ^ ... ^ U_iter
@@ -82,9 +82,9 @@ public extension PKCS5 {
   }
 }
 
-fileprivate extension PKCS5.PBKDF2 {
-  func ARR(_ i: Int) -> Array<UInt8> {
-    var inti = Array<UInt8>(repeating: 0, count: 4)
+private extension PKCS5.PBKDF2 {
+  func ARR(_ i: Int) -> [UInt8] {
+    var inti = [UInt8](repeating: 0, count: 4)
     inti[0] = UInt8((i >> 24) & 0xFF)
     inti[1] = UInt8((i >> 16) & 0xFF)
     inti[2] = UInt8((i >> 8) & 0xFF)
@@ -94,7 +94,7 @@ fileprivate extension PKCS5.PBKDF2 {
 
   // F (P, S, c, i) = U_1 \xor U_2 \xor ... \xor U_c
   // U_1 = PRF (P, S || INT (i))
-  func calculateBlock(_ salt: Array<UInt8>, blockNum: Int) throws -> Array<UInt8>? {
+  func calculateBlock(_ salt: [UInt8], blockNum: Int) throws -> [UInt8]? {
     guard let u1 = try? prf.authenticate(salt + ARR(blockNum)) else { // blockNum.bytes() is slower
       return nil
     }

@@ -16,7 +16,7 @@ final class BlockEncryptor: Cryptor, Updatable {
   private var worker: CipherModeWorker
   private let padding: Padding
   // Accumulated bytes. Not all processed bytes.
-  private var accumulated = Array<UInt8>(reserveCapacity: 16)
+  private var accumulated = [UInt8](reserveCapacity: 16)
 
   private var lastBlockRemainder = 0
 
@@ -28,14 +28,14 @@ final class BlockEncryptor: Cryptor, Updatable {
 
   // MARK: Updatable
 
-  public func update(withBytes bytes: ArraySlice<UInt8>, isLast: Bool) throws -> Array<UInt8> {
+  public func update(withBytes bytes: ArraySlice<UInt8>, isLast: Bool) throws -> [UInt8] {
     accumulated += bytes
 
     if isLast {
       accumulated = padding.add(to: accumulated, blockSize: blockSize)
     }
 
-    var encrypted = Array<UInt8>(reserveCapacity: accumulated.count)
+    var encrypted = [UInt8](reserveCapacity: accumulated.count)
     for chunk in accumulated.batched(by: blockSize) {
       if isLast || chunk.count == blockSize {
         encrypted += worker.encrypt(block: chunk)

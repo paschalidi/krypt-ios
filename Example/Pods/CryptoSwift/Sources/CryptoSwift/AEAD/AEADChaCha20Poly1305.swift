@@ -22,10 +22,10 @@ public final class AEADChaCha20Poly1305: AEAD {
   public static var ivRange = Range<Int>(12 ... 12)
 
   /// Authenticated encryption
-  public static func encrypt(_ plainText: Array<UInt8>, key: Array<UInt8>, iv: Array<UInt8>, authenticationHeader: Array<UInt8>) throws -> (cipherText: Array<UInt8>, authenticationTag: Array<UInt8>) {
+  public static func encrypt(_ plainText: [UInt8], key: [UInt8], iv: [UInt8], authenticationHeader: [UInt8]) throws -> (cipherText: [UInt8], authenticationTag: [UInt8]) {
     let cipher = try ChaCha20(key: key, iv: iv)
 
-    var polykey = Array<UInt8>(repeating: 0, count: kLen)
+    var polykey = [UInt8](repeating: 0, count: kLen)
     var toEncrypt = polykey
     polykey = try cipher.encrypt(polykey)
     toEncrypt += polykey
@@ -39,16 +39,16 @@ public final class AEADChaCha20Poly1305: AEAD {
   }
 
   /// Authenticated decryption
-  public static func decrypt(_ cipherText: Array<UInt8>, key: Array<UInt8>, iv: Array<UInt8>, authenticationHeader: Array<UInt8>, authenticationTag: Array<UInt8>) throws -> (plainText: Array<UInt8>, success: Bool) {
+  public static func decrypt(_ cipherText: [UInt8], key: [UInt8], iv: [UInt8], authenticationHeader: [UInt8], authenticationTag: [UInt8]) throws -> (plainText: [UInt8], success: Bool) {
     let chacha = try ChaCha20(key: key, iv: iv)
 
-    let polykey = try chacha.encrypt(Array<UInt8>(repeating: 0, count: kLen))
+    let polykey = try chacha.encrypt([UInt8](repeating: 0, count: kLen))
     let mac = try calculateAuthenticationTag(authenticator: Poly1305(key: polykey), cipherText: cipherText, authenticationHeader: authenticationHeader)
     guard mac == authenticationTag else {
       return (cipherText, false)
     }
 
-    var toDecrypt = Array<UInt8>(reserveCapacity: cipherText.count + 64)
+    var toDecrypt = [UInt8](reserveCapacity: cipherText.count + 64)
     toDecrypt += polykey
     toDecrypt += polykey
     toDecrypt += cipherText

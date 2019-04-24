@@ -16,7 +16,7 @@ final class StreamDecryptor: Cryptor, Updatable {
   private let blockSize: Int
   private var worker: CipherModeWorker
   private let padding: Padding
-  private var accumulated = Array<UInt8>()
+  private var accumulated = [UInt8]()
 
   private var lastBlockRemainder = 0
 
@@ -28,7 +28,7 @@ final class StreamDecryptor: Cryptor, Updatable {
 
   // MARK: Updatable
 
-  public func update(withBytes bytes: ArraySlice<UInt8>, isLast: Bool) throws -> Array<UInt8> {
+  public func update(withBytes bytes: ArraySlice<UInt8>, isLast: Bool) throws -> [UInt8] {
     accumulated += bytes
 
     let toProcess = accumulated.prefix(max(accumulated.count - worker.additionalBufferSize, 0))
@@ -39,7 +39,7 @@ final class StreamDecryptor: Cryptor, Updatable {
     }
 
     var processedBytesCount = 0
-    var plaintext = Array<UInt8>(reserveCapacity: bytes.count + worker.additionalBufferSize)
+    var plaintext = [UInt8](reserveCapacity: bytes.count + worker.additionalBufferSize)
     for chunk in toProcess.batched(by: blockSize) {
       plaintext += worker.decrypt(block: chunk)
       processedBytesCount += chunk.count

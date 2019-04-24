@@ -33,8 +33,8 @@ public struct HKDF {
 
   private let numBlocks: Int // l
   private let dkLen: Int
-  private let info: Array<UInt8>
-  fileprivate let prk: Array<UInt8>
+  private let info: [UInt8]
+  fileprivate let prk: [UInt8]
   fileprivate let variant: HMAC.Variant
 
   /// - parameters:
@@ -42,7 +42,7 @@ public struct HKDF {
   ///   - salt: optional salt (if not provided, it is set to a sequence of variant.digestLength zeros)
   ///   - info: optional context and application specific information
   ///   - keyLength: intended length of derived key
-  public init(password: Array<UInt8>, salt: Array<UInt8>? = nil, info: Array<UInt8>? = nil, keyLength: Int? = nil /* dkLen */, variant: HMAC.Variant = .sha256) throws {
+  public init(password: [UInt8], salt: [UInt8]? = nil, info: [UInt8]? = nil, keyLength: Int? = nil /* dkLen */, variant: HMAC.Variant = .sha256) throws {
     guard !password.isEmpty else {
       throw Error.invalidInput
     }
@@ -64,11 +64,11 @@ public struct HKDF {
     self.numBlocks = numBlocks
   }
 
-  public func calculate() throws -> Array<UInt8> {
+  public func calculate() throws -> [UInt8] {
     let hmac = HMAC(key: prk, variant: variant)
-    var ret = Array<UInt8>()
+    var ret = [UInt8]()
     ret.reserveCapacity(numBlocks * variant.digestLength)
-    var value = Array<UInt8>()
+    var value = [UInt8]()
     for i in 1 ... numBlocks {
       value.append(contentsOf: info)
       value.append(UInt8(i))

@@ -32,15 +32,15 @@ public struct CCM: StreamMode {
   }
 
   public let options: BlockModeOption = [.initializationVectorRequired, .useEncryptToDecrypt]
-  private let nonce: Array<UInt8>
-  private let additionalAuthenticatedData: Array<UInt8>?
+  private let nonce: [UInt8]
+  private let additionalAuthenticatedData: [UInt8]?
   private let tagLength: Int
   private let messageLength: Int // total message length. need to know in advance
 
   // `authenticationTag` nil for encryption, known tag for decryption
   /// For encryption, the value is set at the end of the encryption.
   /// For decryption, this is a known Tag to validate against.
-  public var authenticationTag: Array<UInt8>?
+  public var authenticationTag: [UInt8]?
 
   /// Initialize CCM
   ///
@@ -49,7 +49,7 @@ public struct CCM: StreamMode {
   ///   - tagLength: Authentication tag length, in bytes. Value of {4, 6, 8, 10, 12, 14, 16}.
   ///   - messageLength: Plaintext message length (excluding tag if attached). Length have to be provided in advance.
   ///   - additionalAuthenticatedData: Additional authenticated data.
-  public init(iv: Array<UInt8>, tagLength: Int, messageLength: Int, additionalAuthenticatedData: Array<UInt8>? = nil) {
+  public init(iv: [UInt8], tagLength: Int, messageLength: Int, additionalAuthenticatedData: [UInt8]? = nil) {
     nonce = iv
     self.tagLength = tagLength
     self.additionalAuthenticatedData = additionalAuthenticatedData
@@ -64,7 +64,7 @@ public struct CCM: StreamMode {
   ///   - messageLength: Plaintext message length (excluding tag if attached). Length have to be provided in advance.
   ///   - authenticationTag: Authentication Tag value if not concatenated to ciphertext.
   ///   - additionalAuthenticatedData: Additional authenticated data.
-  public init(iv: Array<UInt8>, tagLength: Int, messageLength: Int, authenticationTag: Array<UInt8>, additionalAuthenticatedData: Array<UInt8>? = nil) {
+  public init(iv: [UInt8], tagLength: Int, messageLength: Int, authenticationTag: [UInt8], additionalAuthenticatedData: [UInt8]? = nil) {
     self.init(iv: iv, tagLength: tagLength, messageLength: messageLength, additionalAuthenticatedData: additionalAuthenticatedData)
     self.authenticationTag = authenticationTag
   }
@@ -90,17 +90,17 @@ class CCMModeWorker: StreamModeWorker, SeekableModeWorker, CounterModeWorker, Fi
 
   let additionalBufferSize: Int
   private var keystreamPosIdx = 0
-  private let nonce: Array<UInt8>
+  private let nonce: [UInt8]
   private var last_y: ArraySlice<UInt8> = []
-  private var keystream: Array<UInt8> = []
+  private var keystream: [UInt8] = []
   // Known Tag used to validate during decryption
-  private var expectedTag: Array<UInt8>?
+  private var expectedTag: [UInt8]?
 
   public enum Error: Swift.Error {
     case invalidParameter
   }
 
-  init(blockSize _: Int, nonce: ArraySlice<UInt8>, messageLength: Int, additionalAuthenticatedData: [UInt8]?, expectedTag: Array<UInt8>? = nil, tagLength: Int, cipherOperation: @escaping CipherOperationOnBlock) {
+  init(blockSize _: Int, nonce: ArraySlice<UInt8>, messageLength: Int, additionalAuthenticatedData: [UInt8]?, expectedTag: [UInt8]? = nil, tagLength: Int, cipherOperation: @escaping CipherOperationOnBlock) {
     blockSize = 16 // CCM is defined for 128 block size
     self.tagLength = tagLength
     additionalBufferSize = tagLength
@@ -146,8 +146,8 @@ class CCMModeWorker: StreamModeWorker, SeekableModeWorker, CounterModeWorker, Fi
     keystreamPosIdx = offset
   }
 
-  func encrypt(block plaintext: ArraySlice<UInt8>) -> Array<UInt8> {
-    var result = Array<UInt8>(reserveCapacity: plaintext.count)
+  func encrypt(block plaintext: ArraySlice<UInt8>) -> [UInt8] {
+    var result = [UInt8](reserveCapacity: plaintext.count)
 
     var processed = 0
     while processed < plaintext.count {
@@ -164,7 +164,7 @@ class CCMModeWorker: StreamModeWorker, SeekableModeWorker, CounterModeWorker, Fi
         keystreamPosIdx = 0
       }
 
-      let xored: Array<UInt8> = xor(plaintext[plaintext.startIndex.advanced(by: processed)...], keystream[keystreamPosIdx...])
+      let xored: [UInt8] = xor(plaintext[plaintext.startIndex.advanced(by: processed)...], keystream[keystreamPosIdx...])
       keystreamPosIdx += xored.count
       processed += xored.count
       result += xored
@@ -184,8 +184,8 @@ class CCMModeWorker: StreamModeWorker, SeekableModeWorker, CounterModeWorker, Fi
   // CBC is block
   private var accumulatedPlaintext: [UInt8] = []
 
-  func decrypt(block ciphertext: ArraySlice<UInt8>) -> Array<UInt8> {
-    var output = Array<UInt8>(reserveCapacity: ciphertext.count)
+  func decrypt(block ciphertext: ArraySlice<UInt8>) -> [UInt8] {
+    var output = [UInt8](reserveCapacity: ciphertext.count)
 
     do {
       var currentCounter = counter
@@ -200,7 +200,7 @@ class CCMModeWorker: StreamModeWorker, SeekableModeWorker, CounterModeWorker, Fi
           keystreamPosIdx = 0
         }
 
-        let xored: Array<UInt8> = xor(ciphertext[ciphertext.startIndex.advanced(by: processed)...], keystream[keystreamPosIdx...]) // plaintext
+        let xored: [UInt8] = xor(ciphertext[ciphertext.startIndex.advanced(by: processed)...], keystream[keystreamPosIdx...]) // plaintext
         keystreamPosIdx += xored.count
         processed += xored.count
         output += xored
@@ -268,7 +268,7 @@ private func format(nonce N: [UInt8], Q: UInt32, q: UInt8, t: UInt8, hasAssociat
   // 3,2,1 bit is q in 3 bits
   flags0 |= ((q - 1) & 0x07) << 0
 
-  var block0: [UInt8] = Array<UInt8>(repeating: 0, count: 16)
+  var block0: [UInt8] = [UInt8](repeating: 0, count: 16)
   block0[0] = flags0
 
   // N in 1...(15-q) octets, n = 15-q
@@ -298,7 +298,7 @@ private func format(counter i: Int, nonce N: [UInt8], q: UInt8) throws -> [UInt8
   // 3,2,1 bit is q in 3 bits
   flags0 |= ((q - 1) & 0x07) << 0
 
-  var block = Array<UInt8>(repeating: 0, count: 16) // block[0]
+  var block = [UInt8](repeating: 0, count: 16) // block[0]
   block[0] = flags0
 
   // N in 1...(15-q) octets, n = 15-q
@@ -338,9 +338,9 @@ private func format(aad: [UInt8]) -> [UInt8] {
 
 // If data is not a multiple of block size bytes long then the remainder is zero padded
 // Note: It's similar to ZeroPadding, but it's not the same.
-private func addPadding(_ bytes: Array<UInt8>, blockSize: Int) -> Array<UInt8> {
+private func addPadding(_ bytes: [UInt8], blockSize: Int) -> [UInt8] {
   if bytes.isEmpty {
-    return Array<UInt8>(repeating: 0, count: blockSize)
+    return [UInt8](repeating: 0, count: blockSize)
   }
 
   let remainder = bytes.count % blockSize
@@ -350,7 +350,7 @@ private func addPadding(_ bytes: Array<UInt8>, blockSize: Int) -> Array<UInt8> {
 
   let paddingCount = blockSize - remainder
   if paddingCount > 0 {
-    return bytes + Array<UInt8>(repeating: 0, count: paddingCount)
+    return bytes + [UInt8](repeating: 0, count: paddingCount)
   }
   return bytes
 }

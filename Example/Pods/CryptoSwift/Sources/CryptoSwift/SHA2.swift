@@ -21,12 +21,12 @@ public final class SHA2: DigestType {
   let size: Int
   let blockSize: Int
   let digestLength: Int
-  private let k: Array<UInt64>
+  private let k: [UInt64]
 
-  fileprivate var accumulated = Array<UInt8>()
+  fileprivate var accumulated = [UInt8]()
   fileprivate var processedBytesTotalCount: Int = 0
-  fileprivate var accumulatedHash32 = Array<UInt32>()
-  fileprivate var accumulatedHash64 = Array<UInt64>()
+  fileprivate var accumulatedHash32 = [UInt32]()
+  fileprivate var accumulatedHash64 = [UInt64]()
 
   public enum Variant: RawRepresentable {
     case sha224, sha256, sha384, sha512
@@ -62,22 +62,18 @@ public final class SHA2: DigestType {
       switch rawValue {
       case 224:
         self = .sha224
-        break
       case 256:
         self = .sha256
-        break
       case 384:
         self = .sha384
-        break
       case 512:
         self = .sha512
-        break
       default:
         return nil
       }
     }
 
-    fileprivate var h: Array<UInt64> {
+    fileprivate var h: [UInt64] {
       switch self {
       case .sha224:
         return [0xC105_9ED8, 0x367C_D507, 0x3070_DD17, 0xF70E_5939, 0xFFC0_0B31, 0x6858_1511, 0x64F9_8FA7, 0xBEFA_4FA4]
@@ -146,7 +142,7 @@ public final class SHA2: DigestType {
     }
   }
 
-  public func calculate(for bytes: Array<UInt8>) -> Array<UInt8> {
+  public func calculate(for bytes: [UInt8]) -> [UInt8] {
     do {
       return try update(withBytes: bytes.slice, isLast: true)
     } catch {
@@ -154,7 +150,7 @@ public final class SHA2: DigestType {
     }
   }
 
-  fileprivate func process64(block chunk: ArraySlice<UInt8>, currentHash hh: inout Array<UInt64>) {
+  fileprivate func process64(block chunk: ArraySlice<UInt8>, currentHash hh: inout [UInt64]) {
     // break chunk into sixteen 64-bit words M[j], 0 ≤ j ≤ 15, big-endian
     // Extend the sixteen 64-bit words into eighty 64-bit words:
     let M = UnsafeMutablePointer<UInt64>.allocate(capacity: k.count)
@@ -168,12 +164,10 @@ public final class SHA2: DigestType {
       case 0 ... 15:
         let start = chunk.startIndex.advanced(by: x * 8) // * MemoryLayout<UInt64>.size
         M[x] = UInt64(bytes: chunk, fromIndex: start)
-        break
       default:
         let s0 = rotateRight(M[x - 15], by: 1) ^ rotateRight(M[x - 15], by: 8) ^ (M[x - 15] >> 7)
         let s1 = rotateRight(M[x - 2], by: 19) ^ rotateRight(M[x - 2], by: 61) ^ (M[x - 2] >> 6)
         M[x] = M[x - 16] &+ s0 &+ M[x - 7] &+ s1
-        break
       }
     }
 
@@ -216,7 +210,7 @@ public final class SHA2: DigestType {
   }
 
   // mutating currentHash in place is way faster than returning new result
-  fileprivate func process32(block chunk: ArraySlice<UInt8>, currentHash hh: inout Array<UInt32>) {
+  fileprivate func process32(block chunk: ArraySlice<UInt8>, currentHash hh: inout [UInt32]) {
     // break chunk into sixteen 32-bit words M[j], 0 ≤ j ≤ 15, big-endian
     // Extend the sixteen 32-bit words into sixty-four 32-bit words:
     let M = UnsafeMutablePointer<UInt32>.allocate(capacity: k.count)
@@ -231,12 +225,10 @@ public final class SHA2: DigestType {
       case 0 ... 15:
         let start = chunk.startIndex.advanced(by: x * 4) // * MemoryLayout<UInt32>.size
         M[x] = UInt32(bytes: chunk, fromIndex: start)
-        break
       default:
         let s0 = rotateRight(M[x - 15], by: 7) ^ rotateRight(M[x - 15], by: 18) ^ (M[x - 15] >> 3)
         let s1 = rotateRight(M[x - 2], by: 17) ^ rotateRight(M[x - 2], by: 19) ^ (M[x - 2] >> 10)
         M[x] = M[x - 16] &+ s0 &+ M[x - 7] &+ s1
-        break
       }
     }
 
@@ -280,7 +272,7 @@ public final class SHA2: DigestType {
 }
 
 extension SHA2: Updatable {
-  public func update(withBytes bytes: ArraySlice<UInt8>, isLast: Bool = false) throws -> Array<UInt8> {
+  public func update(withBytes bytes: ArraySlice<UInt8>, isLast: Bool = false) throws -> [UInt8] {
     accumulated += bytes
 
     if isLast {
@@ -310,7 +302,7 @@ extension SHA2: Updatable {
     processedBytesTotalCount += processedBytes
 
     // output current hash
-    var result = Array<UInt8>(repeating: 0, count: variant.digestLength)
+    var result = [UInt8](repeating: 0, count: variant.digestLength)
     switch variant {
     case .sha224, .sha256:
       var pos = 0
